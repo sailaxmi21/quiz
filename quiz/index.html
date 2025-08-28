@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz App</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #74ebd5, #9face6);
+    }
+    .container {
+      width: 420px;
+      background: #fff;=
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+      text-align: center;
+      animation: fadeIn 0.6s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    h2 {
+      margin-bottom: 20px;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 8px;
+      background: #3498db;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      transition: 0.3s;
+    }
+    .btn:hover {
+      background: #2980b9;
+    }
+    #next-btn {
+      display: none;
+      margin-top: 15px;
+    }
+    .progress-container {
+      background: #eee;
+      border-radius: 8px;
+      height: 12px;
+      margin-bottom: 15px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 12px;
+      width: 0%;
+      background: #3498db;
+      transition: width 0.4s ease;
+    }
+    .timer {
+      margin-bottom: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #e74c3c;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="timer" id="timer">Time: 15s</div>
+    <div class="progress-container">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <h2 id="question">Question text</h2>
+    <div id="answer-buttons"></div>
+    <button id="next-btn" class="btn">Next</button>
+  </div>
+
+  <script>
+    // ✅ Questions with Answers
+    const questions = [
+      {
+        question: "What is the capital of India?",
+        answers: [
+          { text: "Delhi", correct: true },
+          { text: "Mumbai", correct: false },
+          { text: "Kolkata", correct: false },
+          { text: "Chennai", correct: false }
+        ]
+      },
+      {
+        question: "Which planet is known as the Red Planet?",
+        answers: [
+          { text: "Earth", correct: false },
+          { text: "Venus", correct: false },
+          { text: "Mars", correct: true },
+          { text: "Jupiter", correct: false }
+        ]
+      },
+      {
+        question: "Who wrote the Indian National Anthem?",
+        answers: [
+          { text: "Mahatma Gandhi", correct: false },
+          { text: "Rabindranath Tagore", correct: true },
+          { text: "Jawaharlal Nehru", correct: false },
+          { text: "Subhas Chandra Bose", correct: false }
+        ]
+      },
+      {
+        question: "Which programming language is used for web development?",
+        answers: [
+          { text: "C++", correct: false },
+          { text: "JavaScript", correct: true },
+          { text: "Python", correct: false },
+          { text: "Swift", correct: false }
+        ]
+      },
+      {
+        question: "Which is the largest ocean in the world?",
+        answers: [
+          { text: "Indian Ocean", correct: false },
+          { text: "Pacific Ocean", correct: true },
+          { text: "Atlantic Ocean", correct: false },
+          { text: "Arctic Ocean", correct: false }
+        ]
+      }
+    ];
+
+    const questionElement = document.getElementById("question");
+    const answerButtons = document.getElementById("answer-buttons");
+    const nextButton = document.getElementById("next-btn");
+    const progressBar = document.getElementById("progress-bar");
+    const timerElement = document.getElementById("timer");
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let timeLeft = 15;
+    let timer;
+
+    function startQuiz() {
+      currentQuestionIndex = 0;
+      score = 0;
+      nextButton.innerHTML = "Next";
+      showQuestion();
+    }
+
+    function showQuestion() {
+      resetState();
+      startTimer();
+      let currentQuestion = questions[currentQuestionIndex];
+      questionElement.innerHTML = currentQuestion.question;
+
+      currentQuestion.answers.forEach(answer => {
+        const button = document.createElement("button");
+        button.innerHTML = answer.text;
+        button.classList.add("btn");
+        answerButtons.appendChild(button);
+        if (answer.correct) {
+          button.dataset.correct = answer.correct;
+        }
+        button.addEventListener("click", selectAnswer);
+      });
+
+      updateProgress();
+    }
+
+    function resetState() {
+      clearInterval(timer);
+      timeLeft = 15;
+      timerElement.textContent = `Time: ${timeLeft}s`;
+      nextButton.style.display = "none";
+      while (answerButtons.firstChild) {
+        answerButtons.removeChild(answerButtons.firstChild);
+      }
+    }
+
+    function selectAnswer(e) {
+      clearInterval(timer);
+      const selectedBtn = e.target;
+      const isCorrect = selectedBtn.dataset.correct === "true";
+      if (isCorrect) {
+        selectedBtn.style.background = "green";
+        score++;
+      } else {
+        selectedBtn.style.background = "red";
+      }
+
+      Array.from(answerButtons.children).forEach(button => {
+        if (button.dataset.correct === "true") {
+          button.style.background = "green";
+        }
+        button.disabled = true;
+      });
+
+      nextButton.style.display = "block";
+    }
+
+    function showScore() {
+      resetState();
+      questionElement.innerHTML = `✅ You scored ${score} out of ${questions.length}!`;
+      progressBar.style.width = "100%";
+      nextButton.innerHTML = "Play Again";
+      nextButton.style.display = "block";
+    }
+
+    function handleNextButton() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        showQuestion();
+      } else {
+        showScore();
+      }
+    }
+
+    function updateProgress() {
+      let progressPercent = ((currentQuestionIndex + 1) / questions.length) * 100;
+      progressBar.style.width = progressPercent + "%";
+    }
+
+    function startTimer() {
+      timer = setInterval(() => {
+        timeLeft--;
+        timerElement.textContent = `Time: ${timeLeft}s`;
+
+        if (timeLeft === 0) {
+          clearInterval(timer);
+          Array.from(answerButtons.children).forEach(button => {
+            if (button.dataset.correct === "true") {
+              button.style.background = "green";
+            }
+            button.disabled = true;
+          });
+          nextButton.style.display = "block";
+        }
+      }, 1000);
+    }
+
+    nextButton.addEventListener("click", () => {
+      if (currentQuestionIndex < questions.length) {
+        handleNextButton();
+      } else {
+        startQuiz();
+      }
+    });
+
+    startQuiz();
+  </script>
+</body>
+</html>
